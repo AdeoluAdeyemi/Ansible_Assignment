@@ -1,0 +1,7 @@
+aws_tf_key*
+facts.txt
+.terraform
+.tfstate*
+.terraform.tfstate*
+.terraform.tfstate
+.terraform.tfstate.backup

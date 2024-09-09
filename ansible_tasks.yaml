@@ -1,0 +1,86 @@
+---
+- name: Ansible Hands-on Tasks
+  hosts: all
+  become: true
+  tasks:
+
+  - name: Update system packages
+    apt:
+      upgrade: yes
+      update_cache: true
+
+  - name: Install Docker dependencies
+    apt:
+      name:
+        - ca-certificates
+        - curl
+    register: dependencies
+
+
+- name: Docker Installation
+  hosts: docker
+  become: true
+  tasks:
+
+  - name: Create keyrings directory
+    file:
+      path: /etc/apt/keyrings
+      state: directory
+
+
+  - name: Add Docker GPG Key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+
+  - name: Configure Docker repository
+    apt_repository:
+      repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+      state: present
+
+
+  - name: Install Docker and other dependencies
+    apt:
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-buildx-plugin
+        - docker-compose-plugin
+      state: present
+
+
+  - name: Deploy docker container
+    docker_container:
+      name: workwave-assignment
+      image: adeoluadeyemi/workwave-assignment:1.0.0
+      ports:
+        - '80:80'
+
+
+- name: Install and configure Nginx
+  hosts: nginx
+  become: true
+  tasks:
+
+  - name: Install nginx
+    apt:
+      name: nginx
+    register: install_nginx
+
+
+  - name: Enable Firewall
+    community.general.ufw:
+      rule: allow
+      name: 'Nginx HTTP'
+#      port: '80'
+#      proto: tcp
+
+
+  - name: Check and ensure Nginx Service is running
+    service:
+      name: nginx
+      state: started
+      enabled: yes
+    when: install_nginx is succeeded
